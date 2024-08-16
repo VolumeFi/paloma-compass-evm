@@ -22,6 +22,9 @@ interface ERC20:
     def transfer(_to: address, _value: uint256) -> bool: nonpayable
     def transferFrom(_from: address, _to: address, _value: uint256) -> bool: nonpayable
 
+interface Deployer:
+    def deployFromBytecode(_bytecode: Bytes[24576]) -> address: nonpayable
+
 struct Valset:
     validators: DynArray[address, MAX_VALIDATORS] # Validator addresses
     powers: DynArray[uint256, MAX_VALIDATORS] # Powers of given validators, in the same order as validators array
@@ -84,6 +87,10 @@ event NodeSaleEvent:
     node_count: uint256
     grain_amount: uint256
     nonce: uint256
+    event_id: uint256
+
+event ContractDeployed:
+    child: address
     event_id: uint256
 
 last_checkpoint: public(bytes32)
@@ -250,3 +257,10 @@ def deploy_erc20(_paloma_denom: String[64], _name: String[64], _symbol: String[3
     event_id: uint256 = unsafe_add(self.last_event_id, 1)
     self.last_event_id = event_id
     log ERC20DeployedEvent(_paloma_denom, erc20, _name, _symbol, _decimals, event_id)
+
+@external
+def deploy_from_bytecode(deployer_contract: address, _bytecode: Bytes[24576]):
+    child: address = Deployer(deployer_contract).deployFromBytecode(_bytecode)
+    event_id: uint256 = unsafe_add(self.last_event_id, 1)
+    self.last_event_id = event_id
+    log ContractDeployed(child, event_id)
